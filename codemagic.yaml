@@ -7,7 +7,6 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-
     scripts:
 
       - name: Nettoyage
