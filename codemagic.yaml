@@ -4,16 +4,39 @@ workflows:
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
-      groups:
-        - app_store_credentials
       flutter: stable
       xcode: latest
-      cocoapods: default
     scripts:
-      - name: Get Flutter packages
-        script: flutter packages pub get
-      - name: Flutter build ipa
+      - name: Création d'un vrai projet Xcode
         script: |
+          # 1. On supprime le faux dossier ios
+          rm -rf ios
+          # 2. On demande à Flutter de créer un vrai dossier ios parfait
+          flutter create --platforms ios .
+          
+      - name: Installation des dépendances
+        script: flutter packages pub get
+        
+      - name: Build de l'application (No Codesign)
+        script: | 
+          # On compile l'application sans signature
           flutter build ipa --release --no-codesign
+          
+      - name: Création du package IPA pour Sideloadly
+        script: | 
+          # On va dans le dossier où se trouve l'application brute
+          cd build/ios/archive/Runner.xcarchive/Products/Applications
+          
+          # On prépare le dossier Payload exigé par le format IPA
+          mkdir Payload
+          cp -r Runner.app Payload/
+          
+          # On compresse en .ipa
+          zip -r Sideloadly_App.ipa Payload
+          
+          # On déplace le fichier final à la racine pour le trouver facilement
+          mv Sideloadly_App.ipa $CM_BUILD_DIR/
+          
     artifacts:
-      - build/ios/ipa/*.ipa
+      # On demande à Codemagic de nous donner ce fichier à la fin
+      - Sideloadly_App.ipa
