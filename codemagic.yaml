@@ -1,32 +1,33 @@
+
 workflows:
   ios-workflow:
-    name: vxkit
+    name: Build vxkit
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Nettoyage et Initialisation
+      - name: Initialisation du projet
         script: |
           rm -rf ios
           flutter create --platforms ios .
-          flutter clean
-          flutter packages pub get
-      - name: Compilation Universelle (No Signature)
+          flutter pub get
+      - name: Compilation Binaire Release
         script: | 
-          # On compile pour simulateur pour ignorer TOUTE signature Apple
-          # Sideloadly se chargera de convertir cela pour votre iPhone
-          flutter build ios --debug --simulator
-      - name: Packaging pour Sideloadly
+          # On utilise 'build ios' avec l'option '--bundle-sideloading' si possible 
+          # ou simplement '--no-codesign' mais avec une cible générique
+          flutter build ios --release --no-codesign
+      - name: Création du package IPA pour Sideloadly
         script: | 
-          # On cible le dossier Debug-iphonesimulator
-          cd build/ios/iphonesimulator
+          # On se place dans le dossier où Runner.app a été généré
+          cd build/ios/iphoneos
           
+          # On crée la structure standard d'un IPA
           mkdir -p Payload
           cp -r Runner.app Payload/
           
-          # On crée l'IPA final
+          # On compresse le tout en .ipa
           zip -r $CM_BUILD_DIR/vxkit.ipa Payload
     artifacts:
       - "*.ipa"
