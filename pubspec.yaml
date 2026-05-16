@@ -10,7 +10,6 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  # INDISPENSABLE pour ton bouton Telegram :
   url_launcher: ^6.2.5
 
 dev_dependencies:
