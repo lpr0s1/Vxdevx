@@ -34,7 +34,7 @@ workflows:
           zip -r vxkit.ipa Payload
           
           # On déplace le fichier final à la racine pour le trouver facilement
-          mv Sideloadly_App.ipa $CM_BUILD_DIR/
+          mv vxkit.ipa $CM_BUILD_DIR/
           
     artifacts:
       # On demande à Codemagic de nous donner ce fichier à la fin
