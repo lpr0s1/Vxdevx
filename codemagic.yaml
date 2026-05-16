@@ -1,0 +1,16 @@
+workflows:
+  build_all:
+    name: Build iOS & Android
+    environment:
+      flutter: stable
+
+    scripts:
+      - flutter pub get
+
+      - flutter build apk --release
+
+      - flutter build ipa --no-codesign
+
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/ios/ipa/*.ipa
