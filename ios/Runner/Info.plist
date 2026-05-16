@@ -22,16 +22,5 @@
 
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>vxkit</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>vxkit</string>
-			</array>
-		</dict>
-	</array>
 </dict>
 </plist>
