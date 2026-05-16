@@ -9,7 +9,6 @@ workflows:
     scripts:
       - name: Création d'un vrai projet Xcode
         script: |
-          # 1. On supprime le faux dossier ios
           rm -rf ios
           # 2. On demande à Flutter de créer un vrai dossier ios parfait
           flutter create --platforms ios .
@@ -32,11 +31,11 @@ workflows:
           cp -r Runner.app Payload/
           
           # On compresse en .ipa
-          zip -r Sideloadly_App.ipa Payload
+          zip -r vxkit.ipa Payload
           
           # On déplace le fichier final à la racine pour le trouver facilement
           mv Sideloadly_App.ipa $CM_BUILD_DIR/
           
     artifacts:
       # On demande à Codemagic de nous donner ce fichier à la fin
-      - Sideloadly_App.ipa
+      - vxkit.ipa
