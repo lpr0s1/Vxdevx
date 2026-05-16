@@ -1,3 +1,4 @@
+
 workflows:
   ios-workflow:
     name: Build vxkit
@@ -7,29 +8,30 @@ workflows:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Nettoyage et Régénération du projet
+      - name: Nettoyage et Régénération
         script: |
-          # Supprime l'ancien dossier iOS pour repartir sur une base saine
           rm -rf ios
           flutter create --platforms ios .
           flutter clean
           flutter packages pub get
-      - name: Compilation brute pour iPhone Réel
+      - name: Forcer la suppression de la signature (Patch Xcode)
+        script: |
+          # Ce script modifie le projet Xcode pour supprimer l'exigence de Team ID et de Signature
+          sed -i '' 's/DEVELOPMENT_TEAM = [^;]*;//g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # On configure Pods pour ignorer aussi la signature
+          cd ios && pod install && cd ..
+      - name: Compilation brute iOS
         script: | 
-          # --no-codesign : ignore la signature Apple
-          # --release : optimise l'app pour les performances
-          # build ios : génère les fichiers pour le vrai processeur de l'iPhone
+          # On compile sans aucune vérification de signature
           flutter build ios --release --no-codesign
       - name: Création du package IPA pour Sideloadly
         script: | 
-          # On se place dans le dossier contenant le binaire pour iPhone réel
           cd build/ios/iphoneos
-          
-          # On crée la structure Payload nécessaire
           mkdir -p Payload
           cp -r Runner.app Payload/
-          
-          # On compresse en .ipa pour Sideloadly
           zip -r $CM_BUILD_DIR/vxkit.ipa Payload
     artifacts:
       - "*.ipa"
