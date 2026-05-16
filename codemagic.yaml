@@ -1,4 +1,3 @@
-
 workflows:
   ios-workflow:
     name: Build vxkit
@@ -8,26 +7,29 @@ workflows:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Initialisation du projet
+      - name: Nettoyage et Régénération du projet
         script: |
+          # Supprime l'ancien dossier iOS pour repartir sur une base saine
           rm -rf ios
           flutter create --platforms ios .
-          flutter pub get
-      - name: Compilation Binaire Release
+          flutter clean
+          flutter packages pub get
+      - name: Compilation brute pour iPhone Réel
         script: | 
-          # On utilise 'build ios' avec l'option '--bundle-sideloading' si possible 
-          # ou simplement '--no-codesign' mais avec une cible générique
+          # --no-codesign : ignore la signature Apple
+          # --release : optimise l'app pour les performances
+          # build ios : génère les fichiers pour le vrai processeur de l'iPhone
           flutter build ios --release --no-codesign
       - name: Création du package IPA pour Sideloadly
         script: | 
-          # On se place dans le dossier où Runner.app a été généré
+          # On se place dans le dossier contenant le binaire pour iPhone réel
           cd build/ios/iphoneos
           
-          # On crée la structure standard d'un IPA
+          # On crée la structure Payload nécessaire
           mkdir -p Payload
           cp -r Runner.app Payload/
           
-          # On compresse le tout en .ipa
+          # On compresse en .ipa pour Sideloadly
           zip -r $CM_BUILD_DIR/vxkit.ipa Payload
     artifacts:
       - "*.ipa"
