@@ -15,7 +15,11 @@ workflows:
           flutter clean
           flutter pub get
 
-      - name: Regénérer les fichiers iOS
+      - name: Supprimer l'ancien dossier iOS
+        script: |
+          rm -rf ios
+
+      - name: Regénérer un dossier iOS propre
         script: |
           flutter create .
 
