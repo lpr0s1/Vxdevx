@@ -1,41 +1,33 @@
+
 workflows:
   ios-workflow:
-    name: vxkit
+    name: Build vxkit
     instance_type: mac_mini_m1
     max_build_duration: 60
     environment:
       flutter: stable
       xcode: latest
     scripts:
-      - name: Création d'un vrai projet Xcode
+      - name: Nettoyage et Régénération du projet
         script: |
           rm -rf ios
-          # 2. On demande à Flutter de créer un vrai dossier ios parfait
           flutter create --platforms ios .
-          
-      - name: Installation des dépendances
-        script: flutter packages pub get
-        
-      - name: Build de l'application (No Codesign)
+          flutter clean
+          flutter packages pub get
+      - name: Compilation brute iOS (Release)
         script: | 
-          # On compile l'application sans signature
-          flutter build ipa --release --no-codesign
-          
+          # On compile en mode 'ios' simple au lieu de 'ipa' pour éviter l'erreur de signature
+          flutter build ios --release --no-codesign
       - name: Création du package IPA pour Sideloadly
         script: | 
-          # On va dans le dossier où se trouve l'application brute
-          cd build/ios/archive/Runner.xcarchive/Products/Applications
+          # On se place dans le dossier de sortie de la compilation brute
+          cd build/ios/iphoneos
           
-          # On prépare le dossier Payload exigé par le format IPA
-          mkdir Payload
+          # On crée la structure Payload requise pour le format IPA
+          mkdir -p Payload
           cp -r Runner.app Payload/
           
-          # On compresse en .ipa
-          zip -r vxkit.ipa Payload
-          
-          # On déplace le fichier final à la racine pour le trouver facilement
-          mv vxkit.ipa $CM_BUILD_DIR/
-          
+          # On compresse en .ipa directement vers la racine de Codemagic
+          zip -r $CM_BUILD_DIR/vxkit.ipa Payload
     artifacts:
-      # On demande à Codemagic de nous donner ce fichier à la fin
-      - vxkit.ipa
+      - "*.ipa"
