@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {
@@ -11,6 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: "VxKit",
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -42,6 +45,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final pages = const [
     HomePage(),
     ToolsPage(),
+    MoviesPage(),
     VersionPage(),
   ];
 
@@ -50,8 +54,6 @@ class _MainNavigationState extends State<MainNavigation> {
     return Scaffold(
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 350),
-        transitionBuilder: (child, animation) =>
-            FadeTransition(opacity: animation, child: child),
         child: pages[index],
       ),
       bottomNavigationBar: NavigationBar(
@@ -67,6 +69,11 @@ class _MainNavigationState extends State<MainNavigation> {
             icon: Icon(Icons.terminal_outlined),
             selectedIcon: Icon(Icons.terminal, color: Colors.red),
             label: 'Outils',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.movie_outlined),
+            selectedIcon: Icon(Icons.movie, color: Colors.blue),
+            label: 'Movies',
           ),
           NavigationDestination(
             icon: Icon(Icons.info_outline),
@@ -108,13 +115,24 @@ class ToolsPage extends StatelessWidget {
 
   Future<void> openTelegram() async {
     final url = Uri.parse("https://t.me/vxshare5");
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception("Impossible d’ouvrir Telegram");
-    }
+    await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 
   @override
   Widget build(BuildContext context) {
+    final tools = [
+      ("Nmap", "nmap -sV -A <cible>", Colors.blue),
+      ("Hydra", "hydra -l admin -P wordlist.txt <cible> ssh", Colors.red),
+      ("Metasploit", "msfconsole", Colors.green),
+      ("Nikto", "nikto -h <cible>", Colors.red),
+      ("Gobuster", "gobuster dir -u <cible> -w wordlist.txt", Colors.blue),
+      ("SQLmap", "sqlmap -u <url> --batch", Colors.green),
+      ("John The Ripper", "john --wordlist=rockyou.txt hash.txt", Colors.red),
+      ("Aircrack-ng", "aircrack-ng capture.cap", Colors.blue),
+      ("Tcpdump", "tcpdump -i eth0", Colors.green),
+      ("Netcat", "nc -lvnp 4444", Colors.red),
+    ];
+
     return Scaffold(
       appBar: AppBar(title: const Text("Commandes Pentest")),
       floatingActionButton: FloatingActionButton.extended(
@@ -123,60 +141,13 @@ class ToolsPage extends StatelessWidget {
         icon: const Icon(Icons.telegram),
         label: const Text("Telegram"),
       ),
-      body: ListView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        children: const [
-          PentestCard(
-            title: "Nmap",
-            command: "nmap -sV -A <cible>",
-            color: Colors.blue,
-          ),
-          PentestCard(
-            title: "Hydra",
-            command: "hydra -l admin -P wordlist.txt <cible> ssh",
-            color: Colors.red,
-          ),
-          PentestCard(
-            title: "Metasploit",
-            command: "msfconsole",
-            color: Colors.green,
-          ),
-          PentestCard(
-            title: "Nikto",
-            command: "nikto -h <cible>",
-            color: Colors.red,
-          ),
-          PentestCard(
-            title: "Gobuster",
-            command: "gobuster dir -u <cible> -w wordlist.txt",
-            color: Colors.blue,
-          ),
-          PentestCard(
-            title: "SQLmap",
-            command: "sqlmap -u <url> --batch",
-            color: Colors.green,
-          ),
-          PentestCard(
-            title: "John The Ripper",
-            command: "john --wordlist=rockyou.txt hash.txt",
-            color: Colors.red,
-          ),
-          PentestCard(
-            title: "Aircrack-ng",
-            command: "aircrack-ng capture.cap",
-            color: Colors.blue,
-          ),
-          PentestCard(
-            title: "Tcpdump",
-            command: "tcpdump -i eth0",
-            color: Colors.green,
-          ),
-          PentestCard(
-            title: "Netcat",
-            command: "nc -lvnp 4444",
-            color: Colors.red,
-          ),
-        ],
+        itemCount: tools.length,
+        itemBuilder: (context, i) {
+          final (name, cmd, color) = tools[i];
+          return PentestCard(title: name, command: cmd, color: color);
+        },
       ),
     );
   }
@@ -194,6 +165,16 @@ class PentestCard extends StatelessWidget {
     required this.color,
   });
 
+  void copyCommand(BuildContext context) {
+    Clipboard.setData(ClipboardData(text: command));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Commande copiée : $command"),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -202,9 +183,30 @@ class PentestCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       child: ListTile(
         leading: Icon(Icons.code, color: color),
-        title: Text(title, style: TextStyle(color: color)),
+        title: Text(title, style: TextStyle(color: color, fontSize: 18)),
         subtitle: Text(command),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: IconButton(
+          icon: const Icon(Icons.copy, color: Colors.white),
+          onPressed: () => copyCommand(context),
+        ),
+      ),
+    );
+  }
+}
+
+//
+// PAGE MOVIES (WEBVIEW)
+//
+class MoviesPage extends StatelessWidget {
+  const MoviesPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Movies")),
+      body: const WebView(
+        initialUrl: "https://hvxsrc.online/v/m",
+        javascriptMode: JavascriptMode.unrestricted,
       ),
     );
   }
