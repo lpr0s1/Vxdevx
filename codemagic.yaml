@@ -15,6 +15,10 @@ workflows:
           flutter clean
           flutter pub get
 
+      - name: Regénérer les fichiers iOS
+        script: |
+          flutter create .
+
       - name: Préparation iOS
         script: |
           cd ios
