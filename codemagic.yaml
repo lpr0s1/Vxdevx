@@ -1,16 +1,20 @@
+
 workflows:
-  build_all:
-    name: Build iOS & Android
+  ios-workflow:
+    name: iOS IPA Build
+    instance_type: mac_mini_m1
+    max_build_duration: 60
     environment:
+      groups:
+        - app_store_credentials
       flutter: stable
-
+      xcode: latest
+      cocoapods: default
     scripts:
-      - flutter pub get
-
-      - flutter build apk --release
-
-      - flutter build ipa --no-codesign
-
+      - name: Get Flutter packages
+        script: flutter packages pub get
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release --no-codesign
     artifacts:
-      - build/app/outputs/flutter-apk/app-release.apk
       - build/ios/ipa/*.ipa
