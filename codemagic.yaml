@@ -1,37 +1,42 @@
-
 workflows:
   ios-workflow:
     name: Build vxkit
     instance_type: mac_mini_m1
     max_build_duration: 60
+
     environment:
       flutter: stable
       xcode: latest
+
     scripts:
-      - name: Nettoyage et Régénération
+
+      - name: Nettoyage
         script: |
-          rm -rf ios
-          flutter create --platforms ios .
           flutter clean
-          flutter packages pub get
-      - name: Forcer la suppression de la signature (Patch Xcode)
+          flutter pub get
+
+      - name: Préparation iOS
         script: |
-          # Ce script modifie le projet Xcode pour supprimer l'exigence de Team ID et de Signature
+          cd ios
+          pod install
+          cd ..
+
+      - name: Patch Xcode (désactivation signature)
+        script: |
           sed -i '' 's/DEVELOPMENT_TEAM = [^;]*;//g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # On configure Pods pour ignorer aussi la signature
-          cd ios && pod install && cd ..
-      - name: Compilation brute iOS
-        script: | 
-          # On compile sans aucune vérification de signature
+
+      - name: Build iOS sans signature
+        script: |
           flutter build ios --release --no-codesign
-      - name: Création du package IPA pour Sideloadly
-        script: | 
+
+      - name: Création IPA
+        script: |
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
           zip -r $CM_BUILD_DIR/vxkit.ipa Payload
+
     artifacts:
       - "*.ipa"
